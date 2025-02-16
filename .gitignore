@@ -6,6 +6,11 @@ __pycache__/
 # C extensions
 *.so
 
+# assignment files
+assets/
+data/
+crossword.py
+
 # Distribution / packaging
 .Python
 build/
