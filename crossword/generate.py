@@ -147,7 +147,30 @@ class CrosswordCreator():
         Return True if arc consistency is enforced and no domains are empty;
         return False if one or more domains end up empty.
         """
-        raise NotImplementedError
+        # if arcs is empty initialize it
+        if arcs == None:
+            arcs = list()
+            assignments = set()
+            # go through every neighbor of var and put it in the set as (var, neighbor) arc
+            while(len(assignments) < len(self.crossword.vars)):
+                highestDegreeVar = self.select_unassigned_variable(assignments)
+                orderedNeighbors = self.order_domain_values(highestDegreeVar, assignments)
+                for neighbor in orderedNeighbors:
+                    arcs.append(tuple(highestDegreeVar, neighbor))
+        # continue until going over all the arcs
+        while(len(arcs) > 0):
+            currentArc = arcs.pop()
+            # reduce domain if possible
+            if self.revise(currentArc):
+                # if the domain after reduction is empty - no solution
+                if len(self.domains[currentArc[0]]) == 0:
+                    return False
+                # check all arcs affected by reduction
+                for var in  self.crossword.neighbors[currentArc[0]].difference(set(currentArc[1])):
+                    arcs.append(tuple(currentArc[0], var))
+            # went through all the arcs and no domain reduction was possible - converged
+            return True
+        
 
     def assignment_complete(self, assignment):
         """
