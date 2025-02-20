@@ -177,7 +177,8 @@ class CrosswordCreator():
         Return True if `assignment` is complete (i.e., assigns a value to each
         crossword variable); return False otherwise.
         """
-        raise NotImplementedError
+        return len(self.variables) == len(assignment)
+
 
     def consistent(self, assignment):
         """
