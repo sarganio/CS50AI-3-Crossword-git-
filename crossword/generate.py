@@ -177,7 +177,7 @@ class CrosswordCreator():
         Return True if `assignment` is complete (i.e., assigns a value to each
         crossword variable); return False otherwise.
         """
-        return len(self.variables) == len(assignment)
+        return len(self.crossword.variables) == len(assignment)
 
 
     def consistent(self, assignment):
@@ -185,7 +185,16 @@ class CrosswordCreator():
         Return True if `assignment` is consistent (i.e., words fit in crossword
         puzzle without conflicting characters); return False otherwise.
         """
-        raise NotImplementedError
+        #for overlapVars in self.crossword.overlaps.keys:
+        #    if overlapVars[0][self.crossword.overlaps[overlapVars][0]] != overlapVars[1][self.crossword.overlaps[overlapVars][1]]:
+        #        return True
+        for var in assignment:
+            for neighbor in self.crossword.neighbors[var]:
+                overlapIndexes = self.crossword.overlaps[(var, neighbor)]# is order important???
+                if var[overlapIndexes[0]] != neighbor[overlapIndexes[1]]:
+                    return False
+        return True
+    
 
     def order_domain_values(self, var, assignment):
         """
