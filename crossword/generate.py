@@ -114,27 +114,25 @@ class CrosswordCreator():
         Return True if a revision was made to the domain of `x`; return
         False if no revision was made.
         """
+        # get the constraint of the two vars
+        xyOverLap = self.crossword.overlaps[x,y]
+        if xyOverLap == None:
+            return False
+        
         isRevised = False
-        # get all constraints of the two vars
-        overLaps = self.crossword.overlaps
-        for xVal in self.domains[x].new():
+
+        for xVal in self.domains[x].copy():
             isFonudPossibleValue = False
-            for yVal in self.domains[y].new():
-                isYValuePossible = True
-                # go over all of common constraints of x var and y var
-                for overlap in overLaps:
-                    # if found a constraint not fulfilled mark y val as impossible value and stop checking additional constraints
-                    if xVal[overlap[0]] != yVal[overlap[1]]:
-                        isYValuePossible = False
-                        break
-                #check if y val satisfied every constraint - if so stop looking for other possible values mark it
-                if isYValuePossible:
+            for yVal in self.domains[y].copy():
+                # check if the overlap is consistant
+                if xVal[xyOverLap[0]] == yVal[xyOverLap[1]]:
                     isFonudPossibleValue = True
-                    break 
+                    break
             # if no possible y value was found - drop x val from domain
             if not isFonudPossibleValue:
                 isRevised = True
-                self.domains[x].remove(xVal)             
+                self.domains[x].remove(xVal)
+
         return isRevised
 
 
@@ -188,13 +186,18 @@ class CrosswordCreator():
         #for overlapVars in self.crossword.overlaps.keys:
         #    if overlapVars[0][self.crossword.overlaps[overlapVars][0]] != overlapVars[1][self.crossword.overlaps[overlapVars][1]]:
         #        return True
-        for var in assignment:
-            for neighbor in self.crossword.neighbors[var]:
-                overlapIndexes = self.crossword.overlaps[(var, neighbor)]# is order important???
-                if var[overlapIndexes[0]] != neighbor[overlapIndexes[1]]:
-                    return False
-        return True
+        return self.numOfRuleOuts(None, None, assignment) == 0
     
+
+    def numOfRuleOuts(self, val, var, assignment):
+        ruleOuts = 0
+        if( val != None and var != None):
+            assignment[var] = val
+        for neighbor in self.crossword.neighbors[var]:
+            overlapIndexes = self.crossword.overlaps[var, neighbor]
+            if var[overlapIndexes[0]] != neighbor[overlapIndexes[1]]:
+                ruleOuts +=1
+        return ruleOuts
 
     def order_domain_values(self, var, assignment):
         """
@@ -203,7 +206,9 @@ class CrosswordCreator():
         The first value in the list, for example, should be the one
         that rules out the fewest values among the neighbors of `var`.
         """
-        raise NotImplementedError
+        # a list of Order Domain Values which will be returned
+        return [val for val in self.domains[var]].sort(key=self.numOfRuleOuts(var, assignment.copy()))
+
 
     def select_unassigned_variable(self, assignment):
         """
@@ -213,7 +218,9 @@ class CrosswordCreator():
         degree. If there is a tie, any of the tied variables are acceptable
         return values.
         """
-        raise NotImplementedError
+        assignedVars = assignment.keys()
+        min(self.crossword.varvariables -  assignedVars, key=lambda v: len(self.neighbors[v] - assignedVars))
+
 
     def backtrack(self, assignment):
         """
