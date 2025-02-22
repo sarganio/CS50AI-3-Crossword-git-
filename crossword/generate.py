@@ -148,24 +148,24 @@ class CrosswordCreator():
         # if arcs is empty initialize it
         if arcs == None:
             arcs = list()
-            assignments = dict()
-            # go through every neighbor of var and put it in the set as (var, neighbor) arc
-            while(len(assignments) < len(self.crossword.variables)):
-                highestDegreeVar = self.select_unassigned_variable(assignments)
-                orderedNeighbors = self.order_domain_values(highestDegreeVar, assignments)
-                for neighbor in orderedNeighbors:
-                    arcs.append(tuple(highestDegreeVar, neighbor))
+            #-----assignments = dict()
+            for var in self.crossword.variables:
+                #-----highestDegreeVar = self.select_unassigned_variable(assignments)
+                #-----orderedNeighbors = self.order_domain_values(highestDegreeVar, assignments)
+                #-----# go through every neighbor of var and put it in the set as (var, neighbor) arc
+                for neighbor in self.crossword.neighbors(var):
+                    arcs.append(tuple([var, neighbor]))
         # continue until going over all the arcs
         while(len(arcs) > 0):
             currentArc = arcs.pop()
             # reduce domain if possible
-            if self.revise(currentArc):
+            if self.revise(currentArc[0],currentArc[1]):
                 # if the domain after reduction is empty - no solution
                 if len(self.domains[currentArc[0]]) == 0:
                     return False
                 # check all arcs affected by reduction
-                for var in  self.crossword.neighbors[currentArc[0]].difference(set(currentArc[1])):
-                    arcs.append(tuple(currentArc[0], var))
+                for var in  self.crossword.neighbors(currentArc[0]).difference(set(currentArc[1])):
+                    arcs.append([tuple(currentArc[0], var)])
             # went through all the arcs and no domain reduction was possible - converged
             return True
         
