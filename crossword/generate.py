@@ -148,9 +148,9 @@ class CrosswordCreator():
         # if arcs is empty initialize it
         if arcs == None:
             arcs = list()
-            assignments = set()
+            assignments = dict()
             # go through every neighbor of var and put it in the set as (var, neighbor) arc
-            while(len(assignments) < len(self.crossword.vars)):
+            while(len(assignments) < len(self.crossword.variables)):
                 highestDegreeVar = self.select_unassigned_variable(assignments)
                 orderedNeighbors = self.order_domain_values(highestDegreeVar, assignments)
                 for neighbor in orderedNeighbors:
@@ -191,11 +191,11 @@ class CrosswordCreator():
 
     def numOfRuleOuts(self, val, var, assignment):
         ruleOuts = 0
-        if( val != None and var != None):
+        if( val is not None and var is not None):
             assignment[var] = val
-        for neighbor in self.crossword.neighbors[var]:
+        for neighbor in self.crossword.neighbors(var):
             overlapIndexes = self.crossword.overlaps[var, neighbor]
-            if var[overlapIndexes[0]] != neighbor[overlapIndexes[1]]:
+            if var.cells[overlapIndexes[0]] != neighbor.cells[overlapIndexes[1]]:
                 ruleOuts +=1
         return ruleOuts
 
@@ -207,7 +207,7 @@ class CrosswordCreator():
         that rules out the fewest values among the neighbors of `var`.
         """
         # a list of Order Domain Values which will be returned
-        return [val for val in self.domains[var]].sort(key=self.numOfRuleOuts(var, assignment.copy()))
+        return [val for val in self.domains[var]].sort(key= lambda val: self.numOfRuleOuts(val, var, assignment.copy()))
 
 
     def select_unassigned_variable(self, assignment):
@@ -219,7 +219,7 @@ class CrosswordCreator():
         return values.
         """
         assignedVars = assignment.keys()
-        min(self.crossword.varvariables -  assignedVars, key=lambda v: len(self.neighbors[v] - assignedVars))
+        return min(self.crossword.variables -  assignedVars, key=lambda v: len(self.crossword.neighbors(v) - assignedVars))
 
 
     def backtrack(self, assignment):
