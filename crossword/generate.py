@@ -116,7 +116,7 @@ class CrosswordCreator():
         """
         # get the constraint of the two vars
         xyOverLap = self.crossword.overlaps[x,y]
-        if xyOverLap == None:
+        if xyOverLap is None:
             return False
         
         isRevised = False
@@ -147,12 +147,8 @@ class CrosswordCreator():
         """
         # if arcs is empty initialize it
         if arcs == None:
-            arcs = list()
-            #-----assignments = dict()
+            arcs = []
             for var in self.crossword.variables:
-                #-----highestDegreeVar = self.select_unassigned_variable(assignments)
-                #-----orderedNeighbors = self.order_domain_values(highestDegreeVar, assignments)
-                #-----# go through every neighbor of var and put it in the set as (var, neighbor) arc
                 for neighbor in self.crossword.neighbors(var):
                     arcs.append(tuple([var, neighbor]))
         # continue until going over all the arcs
@@ -164,10 +160,10 @@ class CrosswordCreator():
                 if len(self.domains[currentArc[0]]) == 0:
                     return False
                 # check all arcs affected by reduction
-                for var in  self.crossword.neighbors(currentArc[0]).difference(set(currentArc[1])):
-                    arcs.append([tuple(currentArc[0], var)])
-            # went through all the arcs and no domain reduction was possible - converged
-            return True
+                for var in  self.crossword.neighbors(currentArc[0]).difference(set([currentArc[1]])):
+                    arcs.append(tuple([currentArc[0], var]))
+        # went through all the arcs and no domain reduction was possible - converged
+        return True
         
 
     def assignment_complete(self, assignment):
@@ -186,13 +182,17 @@ class CrosswordCreator():
         #for overlapVars in self.crossword.overlaps.keys:
         #    if overlapVars[0][self.crossword.overlaps[overlapVars][0]] != overlapVars[1][self.crossword.overlaps[overlapVars][1]]:
         #        return True
-        return self.numOfRuleOuts(None, None, assignment) == 0
+        for var in assignment:
+            for neighbor in self.crossword.neighbors(var):
+                overlapIndexes = self.crossword.overlaps[var, neighbor]
+                if var.cells[overlapIndexes[0]] != neighbor.cells[overlapIndexes[1]]:
+                    return False
+        return True
     
 
     def numOfRuleOuts(self, val, var, assignment):
         ruleOuts = 0
-        if( val is not None and var is not None):
-            assignment[var] = val
+        assert val is not None and var is not None, "val or val has to have a value"
         for neighbor in self.crossword.neighbors(var):
             overlapIndexes = self.crossword.overlaps[var, neighbor]
             if var.cells[overlapIndexes[0]] != neighbor.cells[overlapIndexes[1]]:
@@ -207,7 +207,9 @@ class CrosswordCreator():
         that rules out the fewest values among the neighbors of `var`.
         """
         # a list of Order Domain Values which will be returned
-        return [val for val in self.domains[var]].sort(key= lambda val: self.numOfRuleOuts(val, var, assignment.copy()))
+        ODV = list(self.domains[var])
+        ODV.sort(key= lambda val: self.numOfRuleOuts(val, var, assignment.copy()))
+        return ODV
 
 
     def select_unassigned_variable(self, assignment):
@@ -231,7 +233,19 @@ class CrosswordCreator():
 
         If no assignment is possible, return None.
         """
-        raise NotImplementedError
+        if self.assignment_complete(assignment):
+            return assignment
+        
+        var = self.select_unassigned_variable(assignment)
+
+        for val in self.order_domain_values(var, assignment):
+            assignment[var] = val
+            if self.consistent(assignment):
+                result = self.backtrack(assignment)
+                if result is not None:
+                    return result
+                del assignment[var]
+        return None
 
 
 def main():
