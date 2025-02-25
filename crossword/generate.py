@@ -171,7 +171,7 @@ class CrosswordCreator():
                 if len(self.domains[currentArc[0]]) == 0:
                     return False
                 # check all arcs affected by reduction
-                for var in  self.crossword.neighbors(currentArc[0]).difference(set([currentArc[1]])):# TODO: not adding already searched neighbors!
+                for var in  self.crossword.neighbors(currentArc[0]).difference(set([currentArc[1]])):
                     arcs.append(tuple([var, currentArc[0]]))
         # went through all the arcs and no domain reduction was possible - converged
         return True
@@ -196,7 +196,9 @@ class CrosswordCreator():
         for var in assignment:
             for neighbor in self.crossword.neighbors(var):
                 overlapIndexes = self.crossword.overlaps[var, neighbor]
-                if var.cells[overlapIndexes[0]] != neighbor.cells[overlapIndexes[1]]:
+                if overlapIndexes is None or var not in assignment.keys() or neighbor not in assignment.keys():
+                    continue
+                if assignment[var][overlapIndexes[0]] != assignment[neighbor][overlapIndexes[1]]:
                     return False
         return True
     
@@ -250,12 +252,23 @@ class CrosswordCreator():
         var = self.select_unassigned_variable(assignment)
 
         for val in self.order_domain_values(var, assignment):
-            assignment[var] = val
-            if self.consistent(assignment):
+            # if consist check solution
+            if self.consistent(assignment | {var:val}):
+
+                # assign the least rule out value to var
+                assignment[var] = val
+
+                # after assignment make sure this word wont be found anywhere else in the crossword
+                for var in self.crossword.variables:
+                    if val in self.domains[var]:
+                        self.domains[var].remove(val)
+
                 result = self.backtrack(assignment)
+                # check if no solution was found after backtrack
                 if result is not None:
                     return result
-                del assignment[var]
+                if var in assignment.keys():
+                    del assignment[var]
         return None
 
 
