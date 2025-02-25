@@ -89,6 +89,17 @@ class CrosswordCreator():
         """
         Enforce node and arc consistency, and then solve the CSP.
         """
+        """vars = self.crossword.variables
+        assigned = dict()
+        for var in vars:
+            print(var)
+            print(self.crossword.neighbors(var))
+            assigned[var] = True
+        print("======================================================")
+        for overlap in self.crossword.overlaps:
+            if Variable(1, 7, 'down', 7) in overlap:
+                print("{}".format() + self.crossword.overlaps[overlap]) """
+            
         self.enforce_node_consistency()
         self.ac3()
         return self.backtrack(dict())
@@ -160,8 +171,8 @@ class CrosswordCreator():
                 if len(self.domains[currentArc[0]]) == 0:
                     return False
                 # check all arcs affected by reduction
-                for var in  self.crossword.neighbors(currentArc[0]).difference(set([currentArc[1]])):
-                    arcs.append(tuple([currentArc[0], var]))
+                for var in  self.crossword.neighbors(currentArc[0]).difference(set([currentArc[1]])):# TODO: not adding already searched neighbors!
+                    arcs.append(tuple([var, currentArc[0]]))
         # went through all the arcs and no domain reduction was possible - converged
         return True
         
