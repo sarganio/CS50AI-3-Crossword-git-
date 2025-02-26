@@ -193,22 +193,29 @@ class CrosswordCreator():
         #for overlapVars in self.crossword.overlaps.keys:
         #    if overlapVars[0][self.crossword.overlaps[overlapVars][0]] != overlapVars[1][self.crossword.overlaps[overlapVars][1]]:
         #        return True
+
+        for var in assignment:
+            if len(assignment[var]) != var.length:
+                return False
+        
         for var in assignment:
             for neighbor in self.crossword.neighbors(var):
                 overlapIndexes = self.crossword.overlaps[var, neighbor]
-                if overlapIndexes is None or var not in assignment.keys() or neighbor not in assignment.keys():
+                if var not in assignment.keys() or neighbor not in assignment.keys():
                     continue
                 if assignment[var][overlapIndexes[0]] != assignment[neighbor][overlapIndexes[1]]:
                     return False
         return True
     
 
-    def numOfRuleOuts(self, val, var, assignment):
+    def numOfRuleOuts(self, var, assignment):
         ruleOuts = 0
-        assert val is not None and var is not None, "val or val has to have a value"
+        assert var is not None, "var has to be initialized"
         for neighbor in self.crossword.neighbors(var):
             overlapIndexes = self.crossword.overlaps[var, neighbor]
-            if var.cells[overlapIndexes[0]] != neighbor.cells[overlapIndexes[1]]:
+            if not neighbor in assignment.keys():
+                continue
+            if assignment[var][overlapIndexes[0]] != assignment[neighbor][overlapIndexes[1]]:
                 ruleOuts +=1
         return ruleOuts
 
@@ -221,7 +228,7 @@ class CrosswordCreator():
         """
         # a list of Order Domain Values which will be returned
         ODV = list(self.domains[var])
-        ODV.sort(key= lambda val: self.numOfRuleOuts(val, var, assignment.copy()))
+        ODV.sort(key= lambda val: self.numOfRuleOuts( var, assignment.copy() | {var:val}))
         return ODV
 
 
@@ -233,8 +240,8 @@ class CrosswordCreator():
         degree. If there is a tie, any of the tied variables are acceptable
         return values.
         """
-        assignedVars = assignment.keys()
-        return min(self.crossword.variables -  assignedVars, key=lambda v: len(self.crossword.neighbors(v) - assignedVars))
+        assignedVars = { var for var in assignment if assignment[var] is not None}
+        return min(self.crossword.variables - assignedVars, key=lambda v: len(self.crossword.neighbors(v) - assignedVars))
 
 
     def backtrack(self, assignment):
