@@ -241,7 +241,7 @@ class CrosswordCreator():
         return values.
         """
         assignedVars = { var for var in assignment.keys() if assignment[var] is not None}
-        return min(self.crossword.variables - assignedVars, key=lambda v: len(self.crossword.neighbors(v) - assignedVars))
+        return min(self.crossword.variables - assignedVars, key=lambda v: len(self.domains[v]))
 
 
     def backtrack(self, assignment):
