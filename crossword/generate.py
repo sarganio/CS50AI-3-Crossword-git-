@@ -240,7 +240,7 @@ class CrosswordCreator():
         degree. If there is a tie, any of the tied variables are acceptable
         return values.
         """
-        assignedVars = { var for var in assignment if assignment[var] is not None}
+        assignedVars = { var for var in assignment.keys() if assignment[var] is not None}
         return min(self.crossword.variables - assignedVars, key=lambda v: len(self.crossword.neighbors(v) - assignedVars))
 
 
